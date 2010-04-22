@@ -355,26 +355,28 @@ sub append {
 
   my $stream = list_to_stream(@list);
 
-Converts a list into a stream.  The final item of C<list> should be a promise
-or another stream.  Thus, to generate the numbers one through ten, one could
-do this:
-
- my $stream = list_to_stream( 1 .. 9, node(10, undef) );
- # or
- my $stream = list_to_stream( 1 .. 9, node(10) );
+Converts a list into a stream.
 
 =cut
-
 sub list_to_stream {
-    my $node = pop;
-    $node = node($node) unless is_node($node);    
 
-    while (@_) {
-        my $item = pop;
-        $node = node( $item, $node );
-    }
-    $node;
-}
+   my @list = @_;
+   return undef unless @list;
+   my $head = shift @list;
+   my $tail = @list ? promise { list_to_stream(@list) } : undef;
+   return node($head, $tail);
+}   
+
+#sub list_to_stream {
+#    my $node = pop;
+#    $node = node($node) unless is_node($node);    
+#
+#    while (@_) {
+#        my $item = pop;
+#        $node = node( $item, $node );
+#    }
+#    $node;
+#}
 
 ##############################################################################
 

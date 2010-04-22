@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 64;
+use Test::More tests => 62;
 #use Test::More 'no_plan';
 
 use lib 'lib/', '../lib/';
@@ -185,17 +185,18 @@ is_deeply \@numbers, [ 2, 4, 6, 8 ],
 
 # list_to_stream
 
-ok my $list = list_to_stream( 1 .. 9, node(10) ),
-  'list_to_stream() should return a stream';
-@numbers = ();
-while ( defined( my $num = drop($list) ) ) {
-    push @numbers, $num;
-}
-is_deeply \@numbers, [ 1 .. 10 ], '... and create the numbers one to ten';
+# This test does not apply to re-written list_to_stream().
+#ok my $list = list_to_stream( 1 .. 9, node(10) ),
+#  'list_to_stream() should return a stream';
+#@numbers = ();
+#while ( defined( my $num = drop($list) ) ) {
+#    push @numbers, $num;
+#}
+#is_deeply \@numbers, [ 1 .. 10 ], '... and create the numbers one to ten';
 
 # list_to_stream, final node computed internally
 
-ok $list = list_to_stream( 1 .. 10 ),
+ok my $list = list_to_stream( 1 .. 10 ),
   'list_to_stream() should return a stream';
 @numbers = ();
 while ( defined( my $num = drop($list) ) ) {
@@ -217,6 +218,7 @@ is_deeply \@list, [qw/seventeen three four one/],
 # Solution: bless nodes, check is_node in head, tail, list_to_stream
 #
 $stream = list_to_stream( [A => 1], [B => 2] );
+$stream->tail; # fulfill the promise in the tail
 is_deeply $stream, 
   bless([ [A => 1], 
           bless([ [B => 2], 
