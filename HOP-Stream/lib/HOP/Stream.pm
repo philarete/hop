@@ -13,6 +13,7 @@ our @EXPORT_OK = qw(
   is_node
   iterator_to_stream
   list_to_stream
+  stream_to_list
   append
   merge
   node
@@ -377,6 +378,32 @@ sub list_to_stream {
 #    }
 #    $node;
 #}
+
+##############################################################################
+
+=head2 list_to_stream
+
+ my @list = stream_to_list($stream); 
+
+Or
+
+ my @list = $stream->stream_to_list;
+
+Converts a stream to a list. If you call this on an infinite stream, it 
+may take a long time and use a lot of memory.
+
+=cut
+
+sub stream_to_list {
+
+   my $s = $_[0];
+   my @list;
+   while ($s) {
+      push @list, $s->head;
+      $s = $s->tail;
+   }
+   return @list;
+}
 
 ##############################################################################
 

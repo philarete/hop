@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 62;
+use Test::More tests => 64;
 #use Test::More 'no_plan';
 
 use lib 'lib/', '../lib/';
@@ -20,6 +20,7 @@ my @exported = qw(
   is_node
   iterator_to_stream
   list_to_stream
+  stream_to_list
   append
   merge
   node
@@ -196,13 +197,19 @@ is_deeply \@numbers, [ 2, 4, 6, 8 ],
 
 # list_to_stream, final node computed internally
 
-ok my $list = list_to_stream( 1 .. 10 ),
+ok my $stream = list_to_stream( 1 .. 10 ),
   'list_to_stream() should return a stream';
 @numbers = ();
-while ( defined( my $num = drop($list) ) ) {
+while ( defined( my $num = drop($stream) ) ) {
     push @numbers, $num;
 }
 is_deeply \@numbers, [ 1 .. 10 ], '... and create the numbers one to ten';
+
+# stream_to_list
+
+my $stream = node(1, node(2, node(3, node(4, node(5, undef)))));
+my @list = stream_to_list($stream);
+is_deeply \@list, [ 1 .. 5 ], 'stream_to_list should return one to five';
 
 # insert
 
