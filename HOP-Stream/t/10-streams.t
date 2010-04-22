@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 71;
+use Test::More tests => 75;
 #use Test::More 'no_plan';
 
 use lib 'lib/', '../lib/';
@@ -29,6 +29,7 @@ my @exported = qw(
   promise
   show
   tail
+  take
   transform
   upto
   upfrom
@@ -64,7 +65,14 @@ ok $@ =~ m/^Illegal division by zero/, 'head() should die with that error';
 
 # pick
 my $pickstream = node(0, node(1, node(2, (node 3, undef))));
-ok $pickstream->pick(2) == 2, 'pick should the correct element';
+ok $pickstream->pick(2) == 2, 'pick() should pick the correct element';
+
+# take
+my $takefrom = node(0, node(1, node(2, (node 3, undef))));
+my $taken = $takefrom->take(2);
+ok ref($taken) eq 'HOP::Stream', 'take() should return a stream';
+ok $taken->head == 0, '... with the first element 0';
+ok $taken->tail->head == 1, '... with the second element 1';
 
 # drop
 

@@ -22,6 +22,7 @@ our @EXPORT_OK = qw(
   promise
   show
   tail
+  take
   transform
   upto
   upfrom
@@ -95,6 +96,8 @@ if you wish everything exported.
 =item * stream_to_list
 
 =item * tail
+
+=item * take
 
 =item * transform
 
@@ -269,6 +272,25 @@ sub pick {
       $s = $s->tail;
    }
    return $s->head;
+}
+
+##############################################################################
+
+=head2 take
+
+   my $taken = $stream->take($n);
+
+Returns a new stream consisting of the first n elements of $stream.   
+
+=cut
+
+sub take {
+   my ($s, $n) = @_;
+   if ($n == 0) {
+      return;
+   } else {
+      return node($s->head, take($s->tail, ($n - 1)));
+   }
 }
 
 ##############################################################################
