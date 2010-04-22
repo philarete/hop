@@ -18,6 +18,7 @@ our @EXPORT_OK = qw(
   append
   merge
   node
+  pick
   promise
   show
   tail
@@ -250,6 +251,24 @@ sub show {
         $s = tail($s);
     }
     return $show;
+}
+
+##############################################################################
+
+=head2 pick
+
+  my $pick = $stream->pick($n)
+
+Returns the element of a stream at index n, starting with index 0.
+
+=cut
+
+sub pick {
+   my ($s, $n) = @_;
+   for (1 .. $n) {
+      $s = $s->tail;
+   }
+   return $s->head;
 }
 
 ##############################################################################

@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 69;
+use Test::More tests => 71;
 #use Test::More 'no_plan';
 
 use lib 'lib/', '../lib/';
@@ -25,6 +25,7 @@ my @exported = qw(
   append
   merge
   node
+  pick
   promise
   show
   tail
@@ -60,6 +61,10 @@ $badstream = $badstream->tail;
 ok HOP::Stream::is_error($badstream->[0]), 'tail() should store a division by zero error';
 eval { $badstream->head };
 ok $@ =~ m/^Illegal division by zero/, 'head() should die with that error';
+
+# pick
+my $pickstream = node(0, node(1, node(2, (node 3, undef))));
+ok $pickstream->pick(2) == 2, 'pick should the correct element';
 
 # drop
 
