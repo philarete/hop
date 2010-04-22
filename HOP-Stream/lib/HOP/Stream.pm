@@ -101,12 +101,13 @@ if you wish everything exported.
 
 =head2 node
 
- my $node = node( $head, $tail );
+ my $stream = node( $head, $tail );
 
-Returns a node for a stream. 
+The fundamental constructor for streams. Returns a node, which defines a 
+stream. 
 
-The tail of the node may be a I<promise> to compute the actual tail when
-needed.
+The tail of a node may be either another node, or a I<promise> to compute 
+the actual tail when needed.
 
 =cut
 
@@ -117,9 +118,21 @@ sub node {
 
 ##############################################################################
 
+# For internal use only.
+# Working around inherent problem with "odd" streams:
+# http://homepages.inf.ed.ac.uk/wadler/papers/lazyinstrict/lazyinstrict.ps
+# Used by tail() to store error encountered when fulfilling a promise,
+# so that program doesn't fail until head() is called to fetch the result. 
+my $_error = [];
+sub is_error { ref($_[0]) eq 'ARRAY' and $_[0] eq $_error }
+
 =head2 head
 
-  my $head = head( $node );
+  my $head = head( $stream );
+
+or
+
+  my $head = $stream->head;
 
 This function returns the head of a stream.
 
@@ -127,6 +140,7 @@ This function returns the head of a stream.
 
 sub head {
     my ($s) = @_;
+    die $s->[1] if is_error($s->[0]);
     return undef unless is_node($s);
     $s->[0];
 }
@@ -137,6 +151,10 @@ sub head {
 
  my $tail = tail( $stream ); 
 
+or
+
+ my $tail = $stream->tail;
+
 Returns the I<tail> of a stream.
 
 =cut
@@ -146,7 +164,8 @@ sub tail {
     return undef unless is_node($s);
     
     if ( is_promise( $s->[1] ) ) {
-        $s->[1] = $s->[1]->();
+       $s->[1] = eval { $s->[1]->() };
+       $s->[1] = node($_error, $@) if $@; # store error if encountered
     }
     $s->[1];
 }
