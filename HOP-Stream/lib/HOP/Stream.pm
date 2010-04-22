@@ -12,6 +12,7 @@ our @EXPORT_OK = qw(
   insert
   is_node
   iterator_to_stream
+  stream_to_iterator
   list_to_stream
   stream_to_list
   append
@@ -87,6 +88,10 @@ if you wish everything exported.
 =item * promise
 
 =item * show
+
+=item * stream_to_iterator
+
+=item * stream_to_list
 
 =item * tail
 
@@ -422,6 +427,28 @@ sub iterator_to_stream {
     my $v  = $it->();
     return unless defined $v;
     node( $v, sub { iterator_to_stream($it) } );
+}
+
+##############################################################################
+
+=head2 stream_to_iterator
+
+  my $iterator = stream_to_iterator($stream)
+
+Or
+
+  my $iterator = $stream->iterator_to_stream
+
+Converts a stream to an iterator.
+
+=cut
+
+sub stream_to_iterator {
+   my $s = $_[0];
+   my $it = sub { my $h; 
+                  if (defined $s) { $h = $s->head; $s->drop } 
+                  return $h };
+   return $it;
 }
 
 ##############################################################################

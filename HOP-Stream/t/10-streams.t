@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 64;
+use Test::More tests => 69;
 #use Test::More 'no_plan';
 
 use lib 'lib/', '../lib/';
@@ -19,6 +19,7 @@ my @exported = qw(
   insert
   is_node
   iterator_to_stream
+  stream_to_iterator
   list_to_stream
   stream_to_list
   append
@@ -184,6 +185,15 @@ while ( defined( my $number = drop($stream) ) ) {
 is_deeply \@numbers, [ 2, 4, 6, 8 ],
   '... and the stream should return the correct values';
 
+# stream_to_iterator
+
+$stream = node(0, node(1, node(2, undef)));
+$iter = stream_to_iterator($stream);
+ok ref($iter) eq 'CODE', 'stream_to_iterator() should return an iterator';
+ok $iter->() == 0, '... which should return 0';
+ok $iter->() == 1, '... and then 1';
+ok $iter->() == 2, '... and then 2';
+
 # list_to_stream
 
 # This test does not apply to re-written list_to_stream().
@@ -197,7 +207,7 @@ is_deeply \@numbers, [ 2, 4, 6, 8 ],
 
 # list_to_stream, final node computed internally
 
-ok my $stream = list_to_stream( 1 .. 10 ),
+ok $stream = list_to_stream( 1 .. 10 ),
   'list_to_stream() should return a stream';
 @numbers = ();
 while ( defined( my $num = drop($stream) ) ) {
@@ -207,13 +217,13 @@ is_deeply \@numbers, [ 1 .. 10 ], '... and create the numbers one to ten';
 
 # stream_to_list
 
-my $stream = node(1, node(2, node(3, node(4, node(5, undef)))));
+$stream = node(1, node(2, node(3, node(4, node(5, undef)))));
 my @list = stream_to_list($stream);
 is_deeply \@list, [ 1 .. 5 ], 'stream_to_list should return one to five';
 
 # insert
 
-my @list = qw/seventeen three one/;                # sorted by descending length
+@list = qw/seventeen three one/;                # sorted by descending length
 my $compare = sub { length $_[0] < length $_[1] };
 insert @list, 'four', $compare;
 is_deeply \@list, [qw/seventeen three four one/],
