@@ -381,7 +381,7 @@ sub list_to_stream {
 
 ##############################################################################
 
-=head2 list_to_stream
+=head2 stream_to_list
 
  my @list = stream_to_list($stream); 
 
