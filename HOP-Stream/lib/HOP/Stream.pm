@@ -24,6 +24,7 @@ our @EXPORT_OK = qw(
   show
   tail
   take
+  discard
   transform
   upto
   upfrom
@@ -80,6 +81,8 @@ if you wish everything exported.
 
 =item * iterator_to_stream
 
+=item * list2stream
+
 =item * list_to_stream
 
 =item * append
@@ -94,7 +97,7 @@ if you wish everything exported.
 
 =item * stream_to_iterator
 
-=item * stream_to_list
+=item * stream2list
 
 =item * tail
 
@@ -501,7 +504,7 @@ sub iterator_to_stream {
 
   my $iterator = stream_to_iterator($stream)
 
-Or
+  # or
 
   my $iterator = $stream->iterator_to_stream
 
