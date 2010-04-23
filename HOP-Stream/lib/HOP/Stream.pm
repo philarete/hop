@@ -13,8 +13,9 @@ our @EXPORT_OK = qw(
   is_node
   iterator_to_stream
   stream_to_iterator
+  list2stream
+  stream2list
   list_to_stream
-  stream_to_list
   append
   merge
   node
@@ -398,49 +399,44 @@ sub append {
 
 ##############################################################################
 
-=head2 list_to_stream
+=head2 list2stream
 
-  my $stream = list_to_stream(@list);
+  my $stream = list2stream(@list);
 
-Converts a list into a stream.
+Converts a list into a stream, lazily.
+
+Replaces the non-lazy C<list_to_stream()>, which is kept for backwards-
+compatibility. Unlike C<list_to_stream()>, C<list2stream()> does not 
+append a stream when it finds a node or promise in the final position.
+This enables you to convert a list of streams into a stream of streams,
+or a list of coderefs into a stream of coderefs.
 
 =cut
-sub list_to_stream {
+sub list2stream {
 
    my @list = @_;
    return undef unless @list;
    my $head = shift @list;
-   my $tail = @list ? promise { list_to_stream(@list) } : undef;
+   my $tail = @list ? promise { list2stream(@list) } : undef;
    return node($head, $tail);
 }   
 
-#sub list_to_stream {
-#    my $node = pop;
-#    $node = node($node) unless is_node($node);    
-#
-#    while (@_) {
-#        my $item = pop;
-#        $node = node( $item, $node );
-#    }
-#    $node;
-#}
-
 ##############################################################################
 
-=head2 stream_to_list
+=head2 stream2list
 
- my @list = stream_to_list($stream); 
+ my @list = stream2list($stream); 
 
-Or
+ # or
 
- my @list = $stream->stream_to_list;
+ my @list = $stream->stream2list;
 
 Converts a stream to a list. If you call this on an infinite stream, it 
 may take a long time and use a lot of memory.
 
 =cut
 
-sub stream_to_list {
+sub stream2list {
 
    my $s = $_[0];
    my @list;
@@ -449,6 +445,35 @@ sub stream_to_list {
       $s = $s->tail;
    }
    return @list;
+}
+
+##############################################################################
+
+=head2 list_to_stream
+
+  my $stream = list_to_stream(@list);
+
+Kept for backwards-compatibility. Use C<list2stream> instead.
+
+Converts a list into a stream, non-lazily.  The final item of C<@list> should 
+be a promise or another stream.  Thus, to generate the numbers one through 
+ten, one could do this:
+
+ my $stream = list_to_stream( 1 .. 9, node(10, undef) );
+ # or
+ my $stream = list_to_stream( 1 .. 9, node(10) );
+
+=cut
+
+sub list_to_stream {
+    my $node = pop;
+    $node = node($node) unless is_node($node);    
+
+    while (@_) {
+        my $item = pop;
+        $node = node( $item, $node );
+    }
+    $node;
 }
 
 ##############################################################################

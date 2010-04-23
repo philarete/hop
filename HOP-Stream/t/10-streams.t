@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 75;
+use Test::More tests => 80;
 #use Test::More 'no_plan';
 
 use lib 'lib/', '../lib/';
@@ -20,8 +20,9 @@ my @exported = qw(
   is_node
   iterator_to_stream
   stream_to_iterator
+  list2stream
+  stream2list
   list_to_stream
-  stream_to_list
   append
   merge
   node
@@ -207,16 +208,31 @@ ok $iter->() == 0, '... which should return 0';
 ok $iter->() == 1, '... and then 1';
 ok $iter->() == 2, '... and then 2';
 
+# list2stream
+
+ok $stream = list2stream( 1 .. 10 ),
+  'list2stream() should return a stream';
+@numbers = ();
+while ( defined( my $num = drop($stream) ) ) {
+    push @numbers, $num;
+}
+is_deeply \@numbers, [ 1 .. 10 ], '... and create the numbers one to ten';
+
+# stream2list
+
+$stream = node(1, node(2, node(3, node(4, node(5, undef)))));
+my @list = stream2list($stream);
+is_deeply \@list, [ 1 .. 5 ], 'stream2list should return one to five';
+
 # list_to_stream
 
-# This test does not apply to re-written list_to_stream().
-#ok my $list = list_to_stream( 1 .. 9, node(10) ),
-#  'list_to_stream() should return a stream';
-#@numbers = ();
-#while ( defined( my $num = drop($list) ) ) {
-#    push @numbers, $num;
-#}
-#is_deeply \@numbers, [ 1 .. 10 ], '... and create the numbers one to ten';
+ok my $list = list_to_stream( 1 .. 9, node(10) ),
+  'list_to_stream() should return a stream';
+@numbers = ();
+while ( defined( my $num = drop($list) ) ) {
+    push @numbers, $num;
+}
+is_deeply \@numbers, [ 1 .. 10 ], '... and create the numbers one to ten';
 
 # list_to_stream, final node computed internally
 
@@ -227,12 +243,6 @@ while ( defined( my $num = drop($stream) ) ) {
     push @numbers, $num;
 }
 is_deeply \@numbers, [ 1 .. 10 ], '... and create the numbers one to ten';
-
-# stream_to_list
-
-$stream = node(1, node(2, node(3, node(4, node(5, undef)))));
-my @list = stream_to_list($stream);
-is_deeply \@list, [ 1 .. 5 ], 'stream_to_list should return one to five';
 
 # insert
 
