@@ -135,6 +135,7 @@ sub node {
 # For internal use only.
 # Working around inherent problem with "odd" streams:
 # http://homepages.inf.ed.ac.uk/wadler/papers/lazyinstrict/lazyinstrict.ps
+# http://srfi.schemers.org/srfi-40/srfi-40.html
 # Used by tail() to store error encountered when fulfilling a promise,
 # so that program doesn't fail until head() is called to fetch the result. 
 my $_error = [];
