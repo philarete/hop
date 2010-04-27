@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 87;
+use Test::More tests => 89;
 #use Test::More 'no_plan';
 
 use lib 'lib/', '../lib/';
