@@ -28,6 +28,8 @@ our @EXPORT_OK = qw(
   transform
   upto
   upfrom
+  EMPTY
+  is_empty
 );
 
 our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
@@ -187,6 +189,28 @@ sub tail {
 
 ##############################################################################
 
+=head2 EMPTY
+
+Constant designating the empty stream. Equivalent to C<undef>.
+
+=cut
+
+sub EMPTY () { undef };
+
+##############################################################################
+
+=head2 is_empty
+
+   my $head = $stream->head unless is_empty($stream);
+
+Returns true if $stream is empty.
+
+=cut
+
+sub is_empty { not defined $_[0] }
+
+##############################################################################
+
 =head2 is_node
 
   if ( is_node($tail) ) {
@@ -273,8 +297,12 @@ Returns the element of a stream at index n, starting with index 0.
 
 sub pick {
    my ($s, $n) = @_;
+
+   return if is_empty($s);
+
    for (1 .. $n) {
       $s = $s->tail;
+      return if is_empty($s);
    }
    return $s->head;
 }
@@ -291,8 +319,8 @@ Returns a new stream consisting of the first n elements of $stream.
 
 sub take {
    my ($s, $n) = @_;
-   if ($n == 0) {
-      return;
+   if ($n == 0 or is_empty($s)) {
+      return EMPTY;
    } else {
       return node($s->head, take($s->tail, ($n - 1)));
    }
@@ -328,7 +356,7 @@ This is the C<map> function for streams. It returns a new stream.
 sub transform (&$) {
     my $f = shift;
     my $s = shift;
-    return unless $s;
+    return if is_empty($s);
     node( $f->( head($s) ), promise { transform ( $f, tail($s) ) } );
 }
 
@@ -345,11 +373,11 @@ This is the C<grep> function for streams. It returns a new stream.
 sub filter (&$) {
     my $f = shift;
     my $s = shift;
-    until ( !$s || $f->( head($s) ) ) {
+    until ( is_empty($s) || $f->( head($s) ) ) {
         drop($s);
     }
-    return if !$s;
-    node( head($s), promise { filter ( $f, tail($s) ) } );
+    return EMPTY if is_empty($s);
+    return node( head($s), promise { filter ( $f, tail($s) ) } );
 }
 
 ##############################################################################
@@ -395,10 +423,10 @@ sub append {
 
     while (@streams) {
         my $h = drop( $streams[0] );
-        return node( $h, promise { append(@streams) } ) if defined($h);
+        return node( $h, promise { append(@streams) } ) if not is_empty($h);
         shift @streams;
     }
-    return undef;
+    return EMPTY;
 }
 
 ##############################################################################

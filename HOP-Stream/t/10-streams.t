@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 80;
+use Test::More tests => 87;
 #use Test::More 'no_plan';
 
 use lib 'lib/', '../lib/';
@@ -34,6 +34,8 @@ my @exported = qw(
   transform
   upto
   upfrom
+  EMPTY
+  is_empty
 );
 
 foreach my $function (@exported) {
@@ -64,9 +66,17 @@ ok HOP::Stream::is_error($badstream->[0]), 'tail() should store a division by ze
 eval { $badstream->head };
 ok $@ =~ m/^Illegal division by zero/, 'head() should die with that error';
 
+# EMPTY
+ok ((not defined EMPTY), 'EMPTY should return undef');
+
+# is_empty
+ok is_empty(undef), 'is_empty should return true if its argument is undefined';
+ok ((not is_empty(1)), '... and false otherwise');
+
 # pick
 my $pickstream = node(0, node(1, node(2, (node 3, undef))));
 ok $pickstream->pick(2) == 2, 'pick() should pick the correct element';
+ok ((not defined pick(EMPTY, 0)), '... and should return undef if called on EMPTY');
 
 # take
 my $takefrom = node(0, node(1, node(2, (node 3, undef))));
@@ -74,6 +84,7 @@ my $taken = $takefrom->take(2);
 ok ref($taken) eq 'HOP::Stream', 'take() should return a stream';
 ok $taken->head == 0, '... with the first element 0';
 ok $taken->tail->head == 1, '... with the second element 1';
+ok is_empty(take(EMPTY, 10)), '... and should return EMPTY when called on EMPTY';
 
 # drop
 
@@ -123,6 +134,8 @@ for ( 1 .. 5 ) {
 is_deeply \@numbers, [ 2, 4, 6, 8, 10 ],
   '... which should return the numbers we expect';
 
+ok is_empty( transform { 0 } EMPTY ), '... and should return EMPTY when called on EMPTY';
+
 # filter
 
 # forget the parens in the filter and it's an infinite loop
@@ -134,7 +147,9 @@ for ( 1 .. 5 ) {
     push @numbers, drop($evens);
 }
 is_deeply \@numbers, [ 2, 4, 6, 8, 10 ],
-  '... which should return the numbers we expect';
+  '... and should return the numbers we expect';
+
+ok is_empty( filter { $_[0] } EMPTY ), '... and should return EMPTY when called on EMPTY';
 
 # append
 
