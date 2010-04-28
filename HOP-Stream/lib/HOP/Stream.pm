@@ -30,6 +30,7 @@ our @EXPORT_OK = qw(
   upfrom
   EMPTY
   is_empty
+  fuse
 );
 
 our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
@@ -382,9 +383,42 @@ sub filter (&$) {
 
 ##############################################################################
 
+=head2 fuse
+
+   my $fuse = fuse( $stream1, $stream2, $cmp );
+
+   # or
+
+   my $fuse = fuse( $stream1, $stream2 );
+
+Takes two streams, assumed to be in sorted order, and returns a new stream, 
+also in sorted order, consisting of all the elements of the original two 
+streams. The third, optional, parameter specifies a comparison operator for 
+sorting; if omitted, C<<sub { $_[0] < $_[1] }>> (numeric sort order) will be
+used.
+
+=cut
+
+sub fuse {
+    my ( $s1, $s2, $cmp ) = @_;
+    $cmp ||= sub { $_[0] < $_[1] };
+    return $s1 if is_empty($s2);
+    return $s2 if is_empty($s1);
+    my ( $h1, $h2 ) = ( $s1->head, $s2->head );
+    if ( $cmp->($h2, $h1) ) {
+        node( $h2, promise { fuse( $s1, $s2->tail, $cmp ) } );
+    } else {
+        node( $h1, promise { fuse( $s1->tail, $s2, $cmp ) } );
+    }
+}
+
+##############################################################################
+
 =head2 merge
 
   my $merged_stream = merge( $stream1, $stream2 );
+
+Preserved for backwards-compatibility. Use C<fuse()> instead.
 
 This function takes two streams assumed to be in sorted order and merges them
 into a new stream, also in sorted order.

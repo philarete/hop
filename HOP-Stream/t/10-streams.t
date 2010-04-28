@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 89;
+use Test::More tests => 93;
 #use Test::More 'no_plan';
 
 use lib 'lib/', '../lib/';
@@ -36,6 +36,7 @@ my @exported = qw(
   upfrom
   EMPTY
   is_empty
+  fuse
 );
 
 foreach my $function (@exported) {
@@ -166,6 +167,42 @@ while ( defined( my $num = drop($stream) ) ) {
 is_deeply \@numbers, [ 4..7, 12..15, 25..28 ],
   '... and the stream should return all of the numbers';
 
+# list2stream
+
+ok $stream = list2stream( 1 .. 10 ),
+  'list2stream() should return a stream';
+@numbers = ();
+while ( defined( my $num = drop($stream) ) ) {
+    push @numbers, $num;
+}
+is_deeply \@numbers, [ 1 .. 10 ], '... and create the numbers one to ten';
+
+# stream2list
+
+$stream = node(1, node(2, node(3, node(4, node(5, undef)))));
+my @list = stream2list($stream);
+is_deeply \@list, [ 1 .. 5 ], 'stream2list should return one to five';
+
+# fuse
+
+my $odds = list2stream(1, 3, 5, 7, 9);
+$evens = list2stream(2, 4, 6, 8, 10);
+my $fused = fuse($odds, $evens);
+my @fused = stream2list($fused);
+is_deeply \@fused, [ 1 .. 10 ], 'fuse() should merge sorted streams';
+
+my $s1 = list2stream(1, 2, 3);
+my $s2 = list2stream(1, 2, 3);
+$fused = fuse($s1, $s2);
+@fused = stream2list($fused);
+is_deeply \@fused, [ 1, 1, 2, 2, 3, 3 ], '... without deleting duplicate elements';
+
+my $odds = list2stream(9, 7, 5, 3, 1);
+$evens = list2stream(10, 8, 6, 4, 2);
+my $fused = fuse($odds, $evens, sub { $_[0] > $_[1] });
+my @fused = stream2list($fused);
+is_deeply \@fused, [ 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 ], '... and should merge using an alternate comparison operator';
+
 # merge
 
 sub scale {
@@ -192,7 +229,7 @@ is_deeply \@numbers, [ 1, 2, 3, 4, 5, 6, 8, 9, 10, 12 ],
   'merge() should let us merge sorted streams';
 
 $evens = transform { $_[0] * 2 } upfrom(1);
-my $odds = transform { ( $_[0] * 2 ) - 1 } upfrom(1);
+$odds = transform { ( $_[0] * 2 ) - 1 } upfrom(1);
 my $number = merge( $odds, $evens );
 
 @numbers = ();
@@ -222,22 +259,6 @@ ok ref($iter) eq 'CODE', 'stream_to_iterator() should return an iterator';
 ok $iter->() == 0, '... which should return 0';
 ok $iter->() == 1, '... and then 1';
 ok $iter->() == 2, '... and then 2';
-
-# list2stream
-
-ok $stream = list2stream( 1 .. 10 ),
-  'list2stream() should return a stream';
-@numbers = ();
-while ( defined( my $num = drop($stream) ) ) {
-    push @numbers, $num;
-}
-is_deeply \@numbers, [ 1 .. 10 ], '... and create the numbers one to ten';
-
-# stream2list
-
-$stream = node(1, node(2, node(3, node(4, node(5, undef)))));
-my @list = stream2list($stream);
-is_deeply \@list, [ 1 .. 5 ], 'stream2list should return one to five';
 
 # list_to_stream
 
