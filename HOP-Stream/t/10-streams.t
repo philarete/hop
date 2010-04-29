@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 93;
+use Test::More tests => 100; 
 #use Test::More 'no_plan';
 
 use lib 'lib/', '../lib/';
@@ -37,6 +37,7 @@ my @exported = qw(
   EMPTY
   is_empty
   fuse
+  uniq
 );
 
 foreach my $function (@exported) {
@@ -197,11 +198,27 @@ $fused = fuse($s1, $s2);
 @fused = stream2list($fused);
 is_deeply \@fused, [ 1, 1, 2, 2, 3, 3 ], '... without deleting duplicate elements';
 
-my $odds = list2stream(9, 7, 5, 3, 1);
+$odds = list2stream(9, 7, 5, 3, 1);
 $evens = list2stream(10, 8, 6, 4, 2);
-my $fused = fuse($odds, $evens, sub { $_[0] > $_[1] });
-my @fused = stream2list($fused);
+$fused = fuse($odds, $evens, sub { $_[0] > $_[1] });
+@fused = stream2list($fused);
 is_deeply \@fused, [ 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 ], '... and should merge using an alternate comparison operator';
+
+ok $odds eq fuse($odds, EMPTY), '... and handles EMPTY in the right-had place';
+ok $evens eq fuse(EMPTY, $evens), '... and the left-had place';
+ok is_empty(fuse(EMPTY, EMPTY)), '... and in both places';
+
+
+# uniq
+
+$stream = list2stream(1, 1, 2, 2, 3, 3, 4, 4, 5, 5);
+my @uniq = $stream->uniq->stream2list;
+is_deeply \@uniq, [1, 2, 3, 4, 5], 'uniq() should remove duplicates from a stream';
+$stream = list2stream qw(a a b b c c d d e e);
+@uniq = $stream->uniq( sub {$_[0] eq $_[1]} )->stream2list;
+is_deeply \@uniq, ['a', 'b', 'c', 'd', 'e'], '... using an alternative equality operator';
+ok is_empty(uniq(EMPTY)), '... and should return EMPTY when given EMPTY.';
+
 
 # merge
 

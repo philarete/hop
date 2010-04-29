@@ -31,6 +31,7 @@ our @EXPORT_OK = qw(
   EMPTY
   is_empty
   fuse
+  uniq
 );
 
 our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
@@ -411,6 +412,37 @@ sub fuse {
         node( $h1, promise { fuse( $s1->tail, $s2, $cmp ) } );
     }
 }
+
+##############################################################################
+
+=head2
+
+uniq
+
+   my $uniq = uniq($stream)
+
+   # or
+   
+   my $uniq = $stream->uniq;
+
+Creates a new stream from the input stream, removing duplicate elements.
+
+=cut
+
+sub uniq {
+   my ($s, $eq) = @_;
+   $eq ||= sub { $_[0] == $_[1] };
+   if (is_empty($s)) {
+      return EMPTY;
+   } elsif (is_empty($s->tail)) {
+      return $s;
+   } elsif ($eq->($s->head, $s->tail->head)) {
+      return uniq($s->tail, $eq);
+   } else {
+      return node($s->head, promise { uniq($s->tail, $eq) });
+   }
+}
+
 
 ##############################################################################
 
