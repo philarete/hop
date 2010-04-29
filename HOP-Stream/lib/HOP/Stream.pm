@@ -33,6 +33,7 @@ our @EXPORT_OK = qw(
   fuse
   uniq
   discard
+  fold
 );
 
 our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
@@ -119,6 +120,8 @@ if you wish everything exported.
 =item * upto
 
 =item * upfrom
+
+=item * fold
 
 =back
 
@@ -682,6 +685,40 @@ sub upfrom {
     my ($m) = @_;
     node( $m, promise { upfrom( $m + 1 ) } );
 }
+
+##############################################################################
+
+=head2 fold
+
+   my $folded = $stream->fold($sub, $base);
+
+   # or
+
+   my $folded = fold($stream, $sub, $base);
+
+fold() applies the coderef C<$sub> to C<$base> and the first element of 
+C<$stream> to compute a new C<$base>, then applies C<$sub> to the new
+C<$base> and the next element of C<$stream>, and so forth, accumulating
+a value that is returned when the end of C<$stream> is reached.
+
+For example, to sum all the elements in C<$stream> you could write:
+
+   my $sum = $stream->fold(sub { $_[0] + $_[1] }, 0);
+
+fold() should not be called on an infinite stream.   
+
+=cut
+
+sub fold {
+   my ($stream, $sub, $base) = @_;
+   while ($stream) {
+      $base = $sub->($base, $stream->head);
+      $stream = $stream->tail;
+   }
+   return $base;
+}
+
+##############################################################################
 
 sub insert (\@$$);
 

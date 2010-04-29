@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 104; 
+use Test::More tests => 107; 
 #use Test::More 'no_plan';
 
 use lib 'lib/', '../lib/';
@@ -39,6 +39,7 @@ my @exported = qw(
   fuse
   uniq
   discard
+  fold
 );
 
 foreach my $function (@exported) {
@@ -314,6 +315,13 @@ my $compare = sub { length $_[0] < length $_[1] };
 insert @list, 'four', $compare;
 is_deeply \@list, [qw/seventeen three four one/],
   'insert() should be able to insert items according to our sort criteria';
+
+# fold
+
+my $s = list2stream(1 .. 100);
+my $sum = $s->fold(sub { $_[0] + $_[1] }, 0);
+ok $sum == 5050, 'fold() should be able to sum a stream';
+ok fold(EMPTY, sub { }, 42) == 42, '... and should return its base if called on EMPTY';
 
 # 
 # streams of array refs do not work properly, because tail [a,b] is b, even if [a,b] is
