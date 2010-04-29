@@ -34,6 +34,7 @@ our @EXPORT_OK = qw(
   uniq
   discard
   fold
+  constants
 );
 
 our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
@@ -75,11 +76,15 @@ if you wish everything exported.
 
 =over 4
 
+=item * constants
+
 =item * cutsort
 
 =item * drop
 
 =item * filter
+
+=item * fold
 
 =item * head
 
@@ -684,6 +689,24 @@ infinite list of numbers starting from C<$num>.
 sub upfrom {
     my ($m) = @_;
     node( $m, promise { upfrom( $m + 1 ) } );
+}
+
+##############################################################################
+
+=head constants
+
+   my $stream = constants( @list );
+
+Returns an infinite stream with the members of C<@list> as its elements, 
+repeating in succession forever.  
+
+=cut
+
+sub constants {
+   my @args = @_;
+   my $first = shift @args;
+   push @args, $first;
+   return node($first, promise { constants(@args) });
 }
 
 ##############################################################################

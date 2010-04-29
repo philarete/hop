@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 107; 
+use Test::More tests => 111; 
 #use Test::More 'no_plan';
 
 use lib 'lib/', '../lib/';
@@ -40,6 +40,7 @@ my @exported = qw(
   uniq
   discard
   fold
+  constants
 );
 
 foreach my $function (@exported) {
@@ -315,6 +316,16 @@ my $compare = sub { length $_[0] < length $_[1] };
 insert @list, 'four', $compare;
 is_deeply \@list, [qw/seventeen three four one/],
   'insert() should be able to insert items according to our sort criteria';
+
+# constants
+
+my $zeroes = constants(0);
+ok ref($zeroes) eq 'HOP::Stream', 'constants() should return a stream';
+my @zeroes = $zeroes->take(10)->stream2list;
+is_deeply \@zeroes, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], '... of one element repeated';
+my $onetwothree = constants(1, 2, 3);
+my @onetwothree = $onetwothree->take(10)->stream2list;
+is_deeply \@onetwothree, [1, 2, 3, 1, 2, 3, 1, 2, 3, 1], '... or several repeated';
 
 # fold
 
