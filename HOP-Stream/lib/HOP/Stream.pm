@@ -91,6 +91,10 @@ if you wish everything exported.
 
 =item * append
 
+=item * fuse
+
+=item * uniq
+
 =item * merge
 
 =item * node
@@ -395,8 +399,7 @@ sub filter (&$) {
 Takes two streams, assumed to be in sorted order, and returns a new stream, 
 also in sorted order, consisting of all the elements of the original two 
 streams. The third, optional, parameter specifies a comparison operator for 
-sorting; if omitted, C<<sub { $_[0] < $_[1] }>> (numeric sort order) will be
-used.
+sorting; if omitted, C<<sub { $_[0] < $_[1] }>> (numeric sort order) is used.
 
 =cut
 
@@ -415,17 +418,18 @@ sub fuse {
 
 ##############################################################################
 
-=head2
+=head2 uniq
 
-uniq
-
-   my $uniq = uniq($stream)
+   my $uniq = uniq($stream, sub { $_[0] eq $_[1] })
 
    # or
    
-   my $uniq = $stream->uniq;
+   my $uniq = $stream->uniq( sub { $_[0] eq $_[1] } );
 
 Creates a new stream from the input stream, removing duplicate elements.
+The optional second parameter is an equality operator for determining whether
+two elements are duplicates. If omitted, C<sub { $_[0] == $_[1] }> (numeric
+equality) is used.
 
 =cut
 
