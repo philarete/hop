@@ -32,6 +32,7 @@ our @EXPORT_OK = qw(
   is_empty
   fuse
   uniq
+  discard
 );
 
 our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
@@ -110,6 +111,8 @@ if you wish everything exported.
 =item * tail
 
 =item * take
+
+=item * discard
 
 =item * transform
 
@@ -317,6 +320,10 @@ sub pick {
 
 =head2 take
 
+   my $taken = take($stream, $n);
+
+   or
+
    my $taken = $stream->take($n);
 
 Returns a new stream consisting of the first n elements of $stream.   
@@ -330,6 +337,30 @@ sub take {
    } else {
       return node($s->head, take($s->tail, ($n - 1)));
    }
+}
+
+##############################################################################
+
+=head2 discard
+
+   my $newstream = discard($stream, $n);
+
+   # or
+
+   my $newstream = $stream->discard($n);
+
+Creates a new stream from the original stream with its first n elements
+discarded.
+
+=cut
+
+sub discard {
+   my ($s, $n) = @_;
+   while (!is_empty($s) and $n > 0) {
+      $s = $s->tail;
+      $n--;
+   }
+   return $s;
 }
 
 ##############################################################################

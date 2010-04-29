@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 100; 
+use Test::More tests => 104; 
 #use Test::More 'no_plan';
 
 use lib 'lib/', '../lib/';
@@ -38,6 +38,7 @@ my @exported = qw(
   is_empty
   fuse
   uniq
+  discard
 );
 
 foreach my $function (@exported) {
@@ -87,6 +88,15 @@ ok ref($taken) eq 'HOP::Stream', 'take() should return a stream';
 ok $taken->head == 0, '... with the first element 0';
 ok $taken->tail->head == 1, '... with the second element 1';
 ok is_empty(take(EMPTY, 10)), '... and should return EMPTY when called on EMPTY';
+
+# discard
+my $discardfrom = list2stream(1 .. 20);
+my $discarded = $discardfrom->discard(10);
+ok ref($discarded) eq 'HOP::Stream', 'discard() should return a stream';
+my @discarded = $discarded->stream2list;
+is_deeply \@discarded, [11 .. 20], '... and should discard the first n elements from its input stream';
+$discarded = discard(EMPTY, 10);
+ok is_empty($discarded), '... and should return EMPTY when called on EMPTY';
 
 # drop
 
