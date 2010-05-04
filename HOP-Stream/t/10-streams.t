@@ -64,12 +64,11 @@ is head($new_stream), 7, 'head() should return the head of a node';
 is tail($new_stream), $stream, 'tail() should return the tail of a node';
 
 # storing errors encountered when running tail
-my $zero = 0;
-my $badstream = node(1, promise { 1 / $zero });
+my $badstream = node(1, promise { die "Ack!" });
 $badstream = $badstream->tail;
-ok HOP::Stream::is_error($badstream->[0]), 'tail() should store a division by zero error';
+ok HOP::Stream::is_error($badstream->[0]), 'tail() should store any error thrown when it fulfills a promise';
 eval { $badstream->head };
-ok $@ =~ m/^Illegal division by zero/, 'head() should die with that error';
+ok $@ =~ m/^Ack!/, 'head() should die with that error';
 
 # EMPTY
 ok ((not defined EMPTY), 'EMPTY should return undef');
