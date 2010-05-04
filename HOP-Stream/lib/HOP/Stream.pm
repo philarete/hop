@@ -556,7 +556,7 @@ or a list of coderefs into a stream of coderefs.
 sub list2stream {
 
    my @list = @_;
-   return undef unless @list;
+   return EMPTY unless @list;
    my $head = shift @list;
    my $tail = @list ? promise { list2stream(@list) } : undef;
    return node($head, $tail);
