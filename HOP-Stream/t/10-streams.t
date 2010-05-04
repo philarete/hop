@@ -64,8 +64,8 @@ is head($new_stream), 7, 'head() should return the head of a node';
 is tail($new_stream), $stream, 'tail() should return the tail of a node';
 
 # storing errors encountered when running tail
-
-my $badstream = node(1, promise { 1 / 0 });
+my $zero = 0;
+my $badstream = node(1, promise { 1 / $zero });
 $badstream = $badstream->tail;
 ok HOP::Stream::is_error($badstream->[0]), 'tail() should store a division by zero error';
 eval { $badstream->head };

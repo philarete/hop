@@ -2,6 +2,7 @@ package HOP::Stream;
 
 use warnings;
 use strict;
+use Carp;
 
 use base 'Exporter';
 our @EXPORT_OK = qw(
@@ -35,9 +36,15 @@ our @EXPORT_OK = qw(
   discard
   fold
   constants
+  dieOnEmpty
+  warnOnEmpty
 );
 
-our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
+#our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
+# don't export dieOnEmpty or warnOnEmpty with :all
+my %not_in_all = ( warnOnEmpty => 1, dieOnEmpty => 1 );
+my @all_but = grep { !$not_in_all{$_} } @EXPORT_OK;
+our %EXPORT_TAGS = ( 'all' => \@all_but );
 
 =head1 NAME
 
@@ -50,6 +57,18 @@ Version 0.03
 =cut
 
 our $VERSION = '0.03';
+
+our $_dieOnEmpty = 0;
+my $_warnOnEmpty = 0;
+
+# handle warnOnEmpty and dieOnEmpty, which are not functions
+sub import {
+   my $package = shift;
+   my %routines = map { $_ => 1 } @_;
+   $_dieOnEmpty = 1 if $routines{dieOnEmpty};
+   $_warnOnEmpty = 1 if $routines{warnOnEmpty};
+   HOP::Stream->export_to_level(1, 0, @_);
+}
 
 =head1 SYNOPSIS
 
@@ -174,7 +193,12 @@ This function returns the head of a stream.
 
 sub head {
     my ($s) = @_;
-    die $s->[1] if is_error($s->[0]);
+    die $s->[1] if ref($s) && is_error($s->[0]); # ref() prevents
+                                                 # autovivification of $s
+    if (is_empty($s)) {
+       croak "Attempt to call head() on empty stream" if $_dieOnEmpty;
+       carp "Attempt to call head() on empty stream" if $_warnOnEmpty;
+    }
     return undef unless is_node($s);
     $s->[0];
 }
@@ -195,6 +219,10 @@ Returns the I<tail> of a stream.
 
 sub tail {
     my ($s) = @_;
+    if (is_empty($s)) {
+       croak "Attempt to call tail() on empty stream" if $_dieOnEmpty;
+       carp "Attempt to call tail() on empty stream" if $_warnOnEmpty;
+    }
     return undef unless is_node($s);
     
     if ( is_promise( $s->[1] ) ) {
