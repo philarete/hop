@@ -811,9 +811,52 @@ sub insert (\@$$) {
     splice( @$a, $lo, 0, $e );
 }
 
+=head1 EXAMPLES
+
+Fibonacci numbers:
+
+   use HOP::Stream qw(node promise);
+
+   sub fibgen {
+       my ($m, $n) = @_;
+       return node ($m, promise { fibgen($n, $m + $n) });
+   }
+
+   $fibs = fibgen(0, 1);
+
+Hailstone sequences:
+
+   use HOP::Stream qw(node promise EMPTY);
+
+   sub hailstones {
+      my $n = $_[0];
+      if ($n == 1) {
+         return node ($n, EMPTY);
+      } else {
+         return node($n, promise { hailstones($n % 2 ? 3 * $n + 1 : $n / 2) });
+      }
+   }
+
+   my $hailstones = hailstones(23);
+
+Hamming's problem:
+
+   use HOP::Stream qw(node promise transform merge);
+
+   sub scale {
+      my ($s, $c) = @_;
+      return transform { $_[0] * c } $s;
+   }
+
+   my $hamming;
+   $hamming = node(1, promise { merge( scale($hamming, 2),
+                                       merge( scale($hamming, 3),
+                                              scale($hamming, 5) ) ) } );
+
 =head1 AUTHOR
 
-Mark Dominus, maintained by Curtis "Ovid" Poe, C<< <ovid@cpan.org> >>
+Mark Dominus, maintained by Curtis "Ovid" Poe, C<< <ovid@cpan.org> >> and
+Brock Sides, C<< <philarete@gmail.com> >>.
 
 =head1 BUGS
 
