@@ -38,6 +38,7 @@ our @EXPORT_OK = qw(
   constants
   dieOnEmpty
   warnOnEmpty
+  genstream
 );
 
 #our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
@@ -767,6 +768,25 @@ sub fold {
       $stream = $stream->tail;
    }
    return $base;
+}
+
+##############################################################################
+
+=head2 genstream
+
+   my $stream = genstream { ... } $base
+
+Generates a new stream beginning with $base, computing successive elements
+by applying the specified procedure to each element in turn. For example, 
+a stream of integers may be defined by
+
+   my $ints = genstream { $_[0] + 1 } 0;
+
+=cut   
+
+sub genstream (&$) {
+   my ($proc, $base) = @_;
+   return node($base, promise { genstream($proc, $proc->($base)) });
 }
 
 ##############################################################################
