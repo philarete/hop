@@ -39,6 +39,7 @@ our @EXPORT_OK = qw(
   dieOnEmpty
   warnOnEmpty
   genstream
+  stream_length
 );
 
 #our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
@@ -774,7 +775,7 @@ sub fold {
 
 =head2 genstream
 
-   my $stream = genstream { ... } $base
+   my $stream = genstream { ... } $base;
 
 Generates a new stream beginning with $base, computing successive elements
 by applying the specified procedure to each element in turn. For example, 
@@ -788,6 +789,31 @@ sub genstream (&$) {
    my ($proc, $base) = @_;
    return node($base, promise { genstream($proc, $proc->($base)) });
 }
+
+##############################################################################
+
+=head2 stream_length
+
+   my $length = $s->stream_length;
+
+   # or
+
+   my $length = stream_length($s);
+
+Returns the length of a finite stream. Will never return if called on an
+infinite stream.
+
+=cut
+
+sub stream_length {
+   my $s = $_[0];
+   my $length = 0;
+   while ($s) {
+      $length++;
+      $s = $s->tail;
+   }
+   return $length;
+} 
 
 ##############################################################################
 
