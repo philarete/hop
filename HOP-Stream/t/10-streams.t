@@ -2,7 +2,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 111; 
+use Test::More tests => 114; 
 #use Test::More 'no_plan';
 
 use lib 'lib/', '../lib/';
@@ -41,6 +41,7 @@ my @exported = qw(
   discard
   fold
   constants
+  genstream
 );
 
 foreach my $function (@exported) {
@@ -332,6 +333,13 @@ my $s = list2stream(1 .. 100);
 my $sum = $s->fold(sub { $_[0] + $_[1] }, 0);
 ok $sum == 5050, 'fold() should be able to sum a stream';
 ok fold(EMPTY, sub { }, 42) == 42, '... and should return its base if called on EMPTY';
+
+# genstream
+my $s = genstream { $_[0] + 1 } 0;
+ok ref($s) eq 'HOP::Stream', 'genstream() should return a stream';
+my @ints = $s->take(10)->stream2list;
+is_deeply \@ints, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], '... and should generate an appropriate stream';
+
 
 # 
 # streams of array refs do not work properly, because tail [a,b] is b, even if [a,b] is

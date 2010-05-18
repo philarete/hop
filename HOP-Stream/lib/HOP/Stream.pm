@@ -778,9 +778,9 @@ sub fold {
 
 Generates a new stream beginning with $base, computing successive elements
 by applying the specified procedure to each element in turn. For example, 
-a stream of integers may be defined by
+a stream of floats approximating the golden ration phi may be defined as
 
-   my $ints = genstream { $_[0] + 1 } 0;
+   my $golden = genstream { 1 / $_[0] + 1 } 1;
 
 =cut   
 
