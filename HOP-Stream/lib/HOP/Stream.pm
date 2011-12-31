@@ -891,7 +891,7 @@ Hamming's problem:
 
    sub scale {
       my ($s, $c) = @_;
-      return transform { $_[0] * c } $s;
+      return transform { $_[0] * $c } $s;
    }
 
    my $hamming;
